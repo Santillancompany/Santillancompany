@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Diario Del Este</title>
+<link href="logo.png" rel="icon"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    mark {
+      background-color: #fef08a;
+      padding: 0 2px;
+      border-radius: 3px;
+    }
+    .dev-controls button {
+      margin-right: 4px;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-900">
+<!-- Encabezado -->
+<header class="bg-[#8B0000] text-white shadow py-4">
+<div class="max-w-7xl mx-auto flex items-center justify-between px-4">
+<div class="flex items-center space-x-4">
+<img alt="Logo Diario Del Este" class="h-12 w-12" src="logo.png"/>
+<h1 class="text-4xl font-bold" style="font-family: Georgia, serif;">Diario Del Este</h1>
+</div>
+<div class="hidden md:block">
+<span class="text-sm" id="fecha"></span>
+</div>
+</div>
+</header>
+<!-- Buscador -->
+<div class="w-full flex justify-center mt-6">
+<form class="w-full max-w-md px-4" onsubmit="return false;">
+<label class="sr-only" for="searchInput">Buscar noticias</label>
+<div class="relative">
+<input class="w-full border border-gray-300 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500" id="searchInput" placeholder="Buscar noticias..." type="text"/>
+<svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 103 10.5a7.5 7.5 0 0013.15 6.15z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+</form>
+</div>
+<!-- Panel de desarrollador -->
+<section class="hidden max-w-3xl mx-auto bg-white p-6 rounded mt-6 shadow" id="devPanel">
+<h2 class="text-xl font-bold mb-4 text-red-700">Modo desarrollador</h2>
+<form class="space-y-4" id="noticiaForm">
+<input class="w-full border p-2 rounded" id="titulo" placeholder="Título de la noticia" required="" type="text"/>
+<input class="w-full border p-2 rounded" id="imagen" placeholder="URL de la imagen" type="url"/>
+<textarea class="w-full border p-2 rounded h-32" id="contenido" placeholder="Contenido detallado" required=""></textarea>
+<select class="w-full border p-2 rounded" id="categoria">
+<option value="destacadas">Destacadas</option>
+<option value="politica">Política</option>
+<option value="deportes">Deportes</option>
+<option value="cultural">Cultural</option>
+</select>
+<div class="flex space-x-2">
+<button class="bg-blue-600 text-white px-4 py-2 rounded" type="submit">Agregar Noticia</button>
+<button class="bg-gray-400 text-white px-4 py-2 rounded" id="salirDev" type="button">Salir</button>
+</div>
+</form>
+</section>
+<!-- Contenedor de noticias -->
+<main class="max-w-7xl mx-auto px-4 mt-6" id="contenedorNoticias">
+<section class="mb-10" id="destacadas">
+<h2 class="text-2xl font-semibold mb-4">Noticias Destacadas</h2>
+<div class="grid md:grid-cols-2 gap-6" id="destacadasNoticias"></div>
+</section>
+<section class="mb-10" id="politica">
+<h2 class="text-2xl font-semibold mb-4">Política</h2>
+<div class="grid md:grid-cols-3 gap-6" id="politicaNoticias"></div>
+</section>
+<section class="mb-10" id="deportes">
+<h2 class="text-2xl font-semibold mb-4">Deportes</h2>
+<div class="grid md:grid-cols-3 gap-6" id="deportesNoticias"></div>
+</section>
+<section class="mb-10" id="cultural">
+<h2 class="text-2xl font-semibold mb-4">Cultural</h2>
+<div class="grid md:grid-cols-3 gap-6" id="culturalNoticias"></div>
+</section>
+</main>
+<footer class="bg-white mt-10 border-t">
+<div class="max-w-7xl mx-auto px-4 py-6 text-center">
+<p class="text-sm text-gray-500">© 2025 Diario Del Este. Todos los derechos reservados.</p>
+</div>
+</footer>
+<script>
+    const noticias = [];
+    const form = document.getElementById("noticiaForm");
+    const devPanel = document.getElementById("devPanel");
+    const searchInput = document.getElementById("searchInput");
+
+    function renderNoticias() {
+      ["destacadas", "politica", "deportes", "cultural"].forEach(cat => {
+        const cont = document.getElementById(cat + "Noticias");
+        cont.innerHTML = "";
+        noticias.filter(n => n.categoria === cat).forEach((n, i) => {
+          const card = document.createElement("article");
+          card.className = "bg-white p-4 rounded shadow cursor-pointer";
+          card.innerHTML = `
+            <img src="${n.imagen}" alt="${n.titulo}" class="w-full rounded mb-2">
+            <h3 class="text-lg font-bold">${n.titulo}</h3>
+            <p class="text-sm text-gray-600">${n.contenido.substring(0, 100)}...</p>
+            <div class="dev-controls mt-2 hidden">
+              <button onclick="editarNoticia(${i})" class="bg-yellow-500 text-white px-2 py-1 rounded">Editar</button>
+              <button onclick="eliminarNoticia(${i})" class="bg-red-600 text-white px-2 py-1 rounded">Eliminar</button>
+            </div>
+          `;
+          card.onclick = () => location.href = "noticia.html?id=" + i;
+          cont.appendChild(card);
+        });
+      });
+    }
+
+    form?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const noticia = {
+        titulo: form.titulo.value,
+        imagen: form.imagen.value,
+        contenido: form.contenido.value,
+        categoria: form.categoria.value
+      };
+      noticias.push(noticia);
+      localStorage.setItem("noticias", JSON.stringify(noticias));
+      renderNoticias();
+      form.reset();
+    });
+
+    document.getElementById("salirDev")?.addEventListener("click", () => {
+      devPanel.classList.add("hidden");
+      document.querySelectorAll(".dev-controls").forEach(c => c.classList.add("hidden"));
+    });
+
+    searchInput?.addEventListener("input", function () {
+      const q = this.value.trim().toLowerCase();
+      if (q === "elsuncho.2011000000") {
+        devPanel.classList.remove("hidden");
+        document.querySelectorAll(".dev-controls").forEach(c => c.classList.remove("hidden"));
+      }
+    });
+
+    function eliminarNoticia(i) {
+      noticias.splice(i, 1);
+      localStorage.setItem("noticias", JSON.stringify(noticias));
+      renderNoticias();
+    }
+
+    function editarNoticia(i) {
+      const n = noticias[i];
+      form.titulo.value = n.titulo;
+      form.imagen.value = n.imagen;
+      form.contenido.value = n.contenido;
+      form.categoria.value = n.categoria;
+      eliminarNoticia(i);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const guardadas = localStorage.getItem("noticias");
+      if (guardadas) {
+        JSON.parse(guardadas).forEach(n => noticias.push(n));
+        renderNoticias();
+      }
+    });
+  </script>
+</body>
+</html>
